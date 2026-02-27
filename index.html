@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futbol Bahis</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Firebase SDK v8 (compat) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <!-- Arka Plan Müziği -->
+    <audio id="bgMusic" loop autoplay>
+        <source src="champions-league.mp3" type="audio/mpeg">
+    </audio>
+    <!-- Giriş/Kayıt Formu -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-box">
+            <h2 id="authTitle">Giriş Yap</h2>
+            
+            <!-- Giriş Formu -->
+            <form id="loginForm" class="auth-form">
+                <input type="text" id="loginName" placeholder="👤 İsim" required>
+                <input type="password" id="loginPassword" placeholder="🔒 Şifre" required>
+                <button type="submit" class="auth-button">Giriş Yap</button>
+                <p class="auth-switch">Hesabın yok mu? <span onclick="showRegister()">Kayıt Ol</span></p>
+            </form>
+
+            <!-- Kayıt Formu -->
+            <form id="registerForm" class="auth-form" style="display: none;">
+                <input type="text" id="registerName" placeholder="👤 İsim" required>
+                <input type="password" id="registerPassword" placeholder="🔒 Şifre" required>
+                <button type="submit" class="auth-button">Kayıt Ol</button>
+                <p class="auth-switch">Zaten hesabın var mı? <span onclick="showLogin()">Giriş Yap</span></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ana Sayfa -->
+    <!-- Admin Paneli -->
+    <div class="admin-panel" id="adminPanel" style="display: none;">
+        <div class="admin-header">
+            <h1>🔐 Admin Paneli</h1>
+            <button onclick="logout()" class="logout-button">Çıkış Yap</button>
+        </div>
+        
+        <div class="admin-stats">
+            <div class="stat-card">
+                <h3>👥 Toplam Kullanıcı</h3>
+                <p id="totalUsers">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>💰 Toplam Bakiye</h3>
+                <p id="totalBalance">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>🎲 Toplam Bahis</h3>
+                <p id="totalBets">0</p>
+            </div>
+        </div>
+        
+        <div class="users-table-container">
+            <h2>📋 Kayıtlı Kullanıcılar</h2>
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>👤 İsim</th>
+                        <th>🔒 Şifre</th>
+                        <th>💰 Bakiye</th>
+                        <th>🎲 Bahisler</th>
+                        <th>⚙️ İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Kullanıcılar buraya eklenecek -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Hamburger Menü -->
+    <div class="hamburger-menu" id="hamburgerMenu" onclick="toggleMenu()" style="display: none;">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+
+    <!-- Yan Menü -->
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <h3>📋 Menü</h3>
+            <span class="close-menu" onclick="toggleMenu()">&times;</span>
+        </div>
+        <div class="menu-items">
+            <div class="menu-item" onclick="showMainPage(); toggleMenu();">🏠 Ana Sayfa</div>
+            <div class="menu-item" onclick="showBetHistory(); toggleMenu();">📊 Bahis Geçmişi</div>
+            <div class="menu-item" onclick="alert('💰 Bakiye: ' + currentUser.balance); toggleMenu();">💰 Bakiye</div>
+            <div class="menu-item" onclick="alert('⚙️ Ayarlar'); toggleMenu();">⚙️ Ayarlar</div>
+            <div class="menu-item" onclick="logout()">🚪 Çıkış Yap</div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" style="display: none;">
+
+        <h1>Futbol Maçı Bahis</h1>
+        
+        <div class="user-info">
+            <span id="userName">👤 Hoş geldin!</span>
+            <div class="balance-container">
+                <img src="logo.jpg" alt="Logo" class="balance-logo">
+                <span id="userBalance" class="balance-amount">2000</span>
+            </div>
+            <button onclick="logout()" class="logout-button">Çıkış Yap</button>
+        </div>
+        
+        <!-- Bahis Geçmişi Sayfası -->
+        <div id="betHistoryPage" style="display: none;">
+            <div class="bet-history-header">
+                <h2>📊 Bahis Geçmişim</h2>
+                <button onclick="showMainContent()" class="back-button">⬅️ Geri Dön</button>
+            </div>
+            
+            <div class="bet-history-stats">
+                <div class="history-stat">
+                    <h3>🎲 Toplam Bahis</h3>
+                    <p id="totalBetsCount">0</p>
+                </div>
+                <div class="history-stat">
+                    <h3>💸 Toplam Harcama</h3>
+                    <p id="totalSpent">0</p>
+                </div>
+            </div>
+            
+            <div class="bet-history-list" id="betHistoryList">
+                <!-- Bahisler buraya eklenecek -->
+            </div>
+        </div>
+        
+        <!-- Ana Sayfa İçeriği -->
+        <div id="mainContent">
+        <div class="teams-container">
+            <div class="team team-a">
+                <h2>⚽ A Takımı</h2>
+                <div class="players">
+                    <div class="player">👤 Talip</div>
+                    <div class="player">👤 Efe</div>
+                    <div class="player">👤 Bahri</div>
+                    <div class="player">👤 Utku</div>
+                    <div class="player">👤 Ahmet Hoca</div>
+                    <div class="player">👤 Burak</div>
+                    <div class="player">👤 Eren</div>
+                </div>
+                <div class="odds">Oran: %4</div>
+                <button class="bet-button" onclick="showBet('A Takımı', 4)">💰 Bahis Yap</button>
+            </div>
+
+            <div class="vs">⚡ VS ⚡
+                <div class="referee">
+                    <p>🎽 HAKEM</p>
+                    <p class="referee-name">Hayrettin Hoca</p>
+                </div>
+            </div>
+
+            <div class="team team-b">
+                <h2>⚽ B Takımı</h2>
+                <div class="players">
+                    <div class="player">👤 Hidayet Hoca</div>
+                    <div class="player">👤 Ahmetsaim</div>
+                    <div class="player">👤 Özkan Hoca</div>
+                    <div class="player">👤 Said</div>
+                    <div class="player">👤 Alper King</div>
+                    <div class="player">👤 Yusuf</div>
+                    <div class="player">👤 Ferhat Hoca</div>
+                </div>
+                <div class="odds">Oran: %2</div>
+                <button class="bet-button" onclick="showBet('B Takımı', 2)">💰 Bahis Yap</button>
+            </div>
+        </div>
+        </div>
+        <!-- Ana Sayfa İçeriği Sonu -->
+    </div>
+
+    <div id="betModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>💰 Bahis Yap</h2>
+            <div class="bet-info">
+                <p class="selected-team">Seçilen Takım: <span id="teamName"></span></p>
+                <p class="user-balance-display">Mevcut Bakiye: <span id="modalBalance">2000</span> 💰</p>
+                
+                <div class="bet-input-container">
+                    <label for="betAmount">Bahis Miktarı:</label>
+                    <input type="number" id="betAmount" placeholder="Miktar girin" min="1" max="99999">
+                </div>
+                
+                <button class="confirm-bet-button" onclick="confirmBet()">✅ Onayla</button>
+                
+                <div id="betResult" class="bet-result" style="display: none;">
+                    <p>✅ Bahis başarıyla alındı!</p>
+                    <p class="result-date">📅 Sonuç: 01.03.2026 Saat 23:00'da açıklanacaktır</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
