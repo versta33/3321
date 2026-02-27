@@ -175,31 +175,34 @@ function checkAuth() {
             return;
         }
         
-        // Kullanıcının güncel bakiyesini users listesinden al
+        // ÖNCE users listesinden güncel bakiyeyi al
         let users = JSON.parse(localStorage.getItem('users')) || [];
         const savedUser = users.find(u => u.name === currentUser.name);
         
         if (savedUser) {
-            // Bakiye varsa onu kullan, yoksa currentUser'daki bakiyeyi kullan
-            if (savedUser.balance !== undefined && savedUser.balance !== null) {
-                currentUser.balance = savedUser.balance;
-            } else if (currentUser.balance === undefined || currentUser.balance === null) {
-                // Her ikisinde de yoksa 2000 ver
-                currentUser.balance = 2000;
+            // users listesindeki bakiyeyi kullan (bu en güncel)
+            currentUser.balance = savedUser.balance !== undefined && savedUser.balance !== null ? savedUser.balance : 2000;
+            
+            // Eğer users'da bakiye yoksa 2000 ver
+            if (savedUser.balance === undefined || savedUser.balance === null) {
                 savedUser.balance = 2000;
+                currentUser.balance = 2000;
                 const userIndex = users.findIndex(u => u.name === currentUser.name);
                 users[userIndex] = savedUser;
                 localStorage.setItem('users', JSON.stringify(users));
             }
+            
+            // currentUser'ı güncelle
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
         } else {
             // users listesinde yoksa currentUser'daki bakiyeyi kullan
             if (currentUser.balance === undefined || currentUser.balance === null) {
                 currentUser.balance = 2000;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
         
+        console.log('Giriş yapıldı, bakiye:', currentUser.balance);
         showMainPage();
     } else {
         showAuthPage();
@@ -213,8 +216,9 @@ function showMainPage() {
     document.getElementById('hamburgerMenu').style.display = 'flex';
     document.getElementById('userName').textContent = `👤 ${currentUser.name}`;
     
-    // Bakiye göster
-    document.getElementById('userBalance').textContent = currentUser.balance || 2000;
+    // Bakiye göster - currentUser'daki güncel bakiyeyi kullan
+    const currentBalance = currentUser.balance !== undefined && currentUser.balance !== null ? currentUser.balance : 2000;
+    document.getElementById('userBalance').textContent = currentBalance;
     
     // Menüyü başlangıçta kapalı tut
     const menu = document.getElementById('sideMenu');
