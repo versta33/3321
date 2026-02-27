@@ -59,9 +59,21 @@ function confirmBet() {
     const newBalance = currentBalance - amount;
     currentUser.balance = newBalance;
     
-    // Firebase veya LocalStorage'a kaydet
+    // ÖNCE LocalStorage users listesini güncelle
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.name === currentUser.name);
+    if (userIndex !== -1) {
+        users[userIndex].balance = newBalance;
+        localStorage.setItem('users', JSON.stringify(users));
+        console.log('✅ Users listesi güncellendi, yeni bakiye:', newBalance);
+    }
+    
+    // SONRA currentUser'ı güncelle
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    console.log('✅ CurrentUser güncellendi, yeni bakiye:', newBalance);
+    
+    // Firebase varsa ona da kaydet
     if (firebaseInitialized && currentUser.id) {
-        // Firebase'e kaydet
         db.collection('users').doc(currentUser.id).update({
             balance: newBalance
         }).then(() => {
@@ -69,20 +81,9 @@ function confirmBet() {
         }).catch(error => {
             console.error('Firebase kayıt hatası:', error);
         });
-    } else {
-        // LocalStorage'a kaydet
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        const userIndex = users.findIndex(u => u.name === currentUser.name);
-        if (userIndex !== -1) {
-            users[userIndex].balance = newBalance;
-            localStorage.setItem('users', JSON.stringify(users));
-        }
     }
     
-    // CurrentUser'ı güncelle
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    
-    // Bakiyeleri güncelle
+    // Ekrandaki bakiyeleri güncelle
     document.getElementById('userBalance').textContent = newBalance;
     document.getElementById('modalBalance').textContent = newBalance;
     
@@ -98,7 +99,6 @@ function confirmBet() {
     };
     
     if (firebaseInitialized && currentUser.id) {
-        // Firebase'e bahis geçmişini kaydet
         db.collection('bets').add({
             userId: currentUser.id,
             userName: currentUser.name,
@@ -111,7 +111,7 @@ function confirmBet() {
         });
     }
     
-    // LocalStorage'a da kaydet (yedek)
+    // LocalStorage'a bahis geçmişini kaydet
     let betHistory = JSON.parse(localStorage.getItem('betHistory_' + currentUser.name)) || [];
     betHistory.push(betData);
     localStorage.setItem('betHistory_' + currentUser.name, JSON.stringify(betHistory));
@@ -175,34 +175,31 @@ function checkAuth() {
             return;
         }
         
-        // ÖNCE users listesinden güncel bakiyeyi al
+        // Users listesinden güncel bakiyeyi al
         let users = JSON.parse(localStorage.getItem('users')) || [];
         const savedUser = users.find(u => u.name === currentUser.name);
         
-        if (savedUser) {
-            // users listesindeki bakiyeyi kullan (bu en güncel)
-            currentUser.balance = savedUser.balance !== undefined && savedUser.balance !== null ? savedUser.balance : 2000;
+        if (savedUser && savedUser.balance !== undefined && savedUser.balance !== null) {
+            // Users listesindeki bakiye varsa onu kullan
+            currentUser.balance = savedUser.balance;
+            console.log('✅ Users listesinden bakiye alındı:', currentUser.balance);
+        } else if (currentUser.balance === undefined || currentUser.balance === null) {
+            // Hiçbir yerde bakiye yoksa 2000 ver
+            currentUser.balance = 2000;
+            console.log('⚠️ Bakiye bulunamadı, 2000 verildi');
             
-            // Eğer users'da bakiye yoksa 2000 ver
-            if (savedUser.balance === undefined || savedUser.balance === null) {
+            // Users listesine de kaydet
+            if (savedUser) {
                 savedUser.balance = 2000;
-                currentUser.balance = 2000;
                 const userIndex = users.findIndex(u => u.name === currentUser.name);
                 users[userIndex] = savedUser;
                 localStorage.setItem('users', JSON.stringify(users));
             }
-            
-            // currentUser'ı güncelle
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        } else {
-            // users listesinde yoksa currentUser'daki bakiyeyi kullan
-            if (currentUser.balance === undefined || currentUser.balance === null) {
-                currentUser.balance = 2000;
-            }
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
         }
         
-        console.log('Giriş yapıldı, bakiye:', currentUser.balance);
+        // currentUser'ı güncelle
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
         showMainPage();
     } else {
         showAuthPage();
