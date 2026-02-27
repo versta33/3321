@@ -51,8 +51,9 @@ function confirmBet() {
         return;
     }
     
-    // Kazanç hesapla (gerçek oran %400 veya %200)
-    const potentialWin = amount + (amount * actualOdds / 100);
+    // Kazanç hesapla (A takımı için 4 kat, B takımı için 2 kat)
+    const multiplier = displayOdds === 4 ? 4 : 2;
+    const potentialWin = amount * multiplier;
     
     // Bakiyeden düş
     const newBalance = currentBalance - amount;
@@ -90,7 +91,7 @@ function confirmBet() {
         team: teamName,
         amount: amount,
         odds: displayOdds,
-        actualOdds: actualOdds,
+        multiplier: multiplier,
         potentialWin: potentialWin,
         date: new Date().toLocaleString('tr-TR'),
         resultDate: '01.03.2026 23:00'
@@ -119,7 +120,7 @@ function confirmBet() {
     document.getElementById('betResult').style.display = 'block';
     betAmountInput.value = '';
     
-    alert(`✅ Bahis başarıyla alındı!\n💰 Yatırılan: ${amount} TL\n🎯 Kazanç Oranı: %${displayOdds}\n💵 Kazanırsanız: ${potentialWin} TL alacaksınız`);
+    alert(`✅ Bahis başarıyla alındı!\n💰 Yatırılan: ${amount} TL\n🎯 Kazanç Oranı: %${displayOdds}\n💵 Kazanırsanız: ${potentialWin} TL alacaksınız (${multiplier}x)`);
 }
 
 window.onclick = function(event) {
@@ -179,14 +180,24 @@ function checkAuth() {
         const savedUser = users.find(u => u.name === currentUser.name);
         
         if (savedUser) {
-            if (savedUser.balance === undefined || savedUser.balance === null) {
+            // Bakiye varsa onu kullan, yoksa currentUser'daki bakiyeyi kullan
+            if (savedUser.balance !== undefined && savedUser.balance !== null) {
+                currentUser.balance = savedUser.balance;
+            } else if (currentUser.balance === undefined || currentUser.balance === null) {
+                // Her ikisinde de yoksa 2000 ver
+                currentUser.balance = 2000;
                 savedUser.balance = 2000;
                 const userIndex = users.findIndex(u => u.name === currentUser.name);
                 users[userIndex] = savedUser;
                 localStorage.setItem('users', JSON.stringify(users));
             }
-            currentUser = savedUser;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        } else {
+            // users listesinde yoksa currentUser'daki bakiyeyi kullan
+            if (currentUser.balance === undefined || currentUser.balance === null) {
+                currentUser.balance = 2000;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
         }
         
         showMainPage();
