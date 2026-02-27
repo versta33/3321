@@ -213,6 +213,10 @@ function showMainPage() {
     document.getElementById('hamburgerMenu').style.display = 'flex';
     document.getElementById('userName').textContent = `👤 ${currentUser.name}`;
     
+    // Ana içeriği göster, bahis geçmişini gizle
+    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('betHistoryPage').style.display = 'none';
+    
     // Bakiye göster - currentUser'daki güncel bakiyeyi kullan
     const currentBalance = currentUser.balance !== undefined && currentUser.balance !== null ? currentUser.balance : 2000;
     document.getElementById('userBalance').textContent = currentBalance;
