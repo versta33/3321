@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futbol Bahis</title>
+    <title>RTX Software</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <!-- Firebase SDK v8 (compat) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
+
 <body>
     <!-- Arka Plan Müziği -->
     <audio id="bgMusic" loop autoplay>
@@ -19,7 +21,7 @@
     <div id="authContainer" class="auth-container">
         <div class="auth-box">
             <h2 id="authTitle">Giriş Yap</h2>
-            
+
             <!-- Giriş Formu -->
             <form id="loginForm" class="auth-form">
                 <input type="text" id="loginName" placeholder="👤 İsim" required>
@@ -45,7 +47,7 @@
             <h1>🔐 Admin Paneli</h1>
             <button onclick="logout()" class="logout-button">Çıkış Yap</button>
         </div>
-        
+
         <div class="admin-stats">
             <div class="stat-card">
                 <h3>👥 Toplam Kullanıcı</h3>
@@ -60,7 +62,7 @@
                 <p id="totalBets">0</p>
             </div>
         </div>
-        
+
         <div class="users-table-container">
             <h2>📋 Kayıtlı Kullanıcılar</h2>
             <table class="users-table">
@@ -99,7 +101,13 @@
         </div>
         <div class="menu-items">
             <div class="menu-item" onclick="showMainPage(); toggleMenu();">🏠 Ana Sayfa</div>
+            <div class="menu-item" onclick="showMatchPage(); toggleMenu();">⚽ Maç Bahis</div>
             <div class="menu-item" onclick="showBetHistory(); toggleMenu();">📊 Bahis Geçmişi</div>
+            <div class="menu-item" onclick="showAviatorPage(); toggleMenu();">✈️ Aviator Oyunu</div>
+            <div class="menu-item" onclick="showMinesPage(); toggleMenu();">💣 Mayın Oyunu</div>
+            <div class="menu-item" onclick="showBlackjackPage(); toggleMenu();">🃏 AI Blackjack</div>
+
+            <div class="menu-item" onclick="showSpinWheelPage(); toggleMenu();">🎡 Günlük Çark</div>
             <div class="menu-item" onclick="alert('💰 Bakiye: ' + currentUser.balance); toggleMenu();">💰 Bakiye</div>
             <div class="menu-item" onclick="alert('⚙️ Ayarlar'); toggleMenu();">⚙️ Ayarlar</div>
             <div class="menu-item" onclick="logout()">🚪 Çıkış Yap</div>
@@ -108,8 +116,8 @@
 
     <div class="container" id="mainContainer" style="display: none;">
 
-        <h1>Futbol Maçı Bahis</h1>
-        
+        <h1>RTX Software</h1>
+
         <div class="user-info">
             <span id="userName">👤 Hoş geldin!</span>
             <div class="balance-container">
@@ -118,14 +126,14 @@
             </div>
             <button onclick="logout()" class="logout-button">Çıkış Yap</button>
         </div>
-        
+
         <!-- Bahis Geçmişi Sayfası -->
         <div id="betHistoryPage" style="display: none;">
             <div class="bet-history-header">
                 <h2>📊 Bahis Geçmişim</h2>
                 <button onclick="showMainPage()" class="back-button">🏠 Ana Sayfa</button>
             </div>
-            
+
             <div class="bet-history-stats">
                 <div class="history-stat">
                     <h3>🎲 Toplam Bahis</h3>
@@ -136,54 +144,529 @@
                     <p id="totalSpent">0</p>
                 </div>
             </div>
-            
+
             <div class="bet-history-list" id="betHistoryList">
                 <!-- Bahisler buraya eklenecek -->
             </div>
         </div>
-        
-        <!-- Ana Sayfa İçeriği -->
-        <div id="mainContent">
-        <div class="teams-container">
-            <div class="team team-a">
-                <h2>⚽ A Takımı</h2>
-                <div class="players">
-                    <div class="player">👤 Talip</div>
-                    <div class="player">👤 Efe</div>
-                    <div class="player">👤 Bahri</div>
-                    <div class="player">👤 Utku</div>
-                    <div class="player">👤 Ahmet Hoca</div>
-                    <div class="player">👤 Burak</div>
-                    <div class="player">👤 Eren</div>
-                </div>
-                <div class="odds">Oran: %4</div>
-                <button class="bet-button" onclick="showBet('A Takımı', 4, 400)">💰 Bahis Yap</button>
+
+        <!-- Aviator Oyunu Sayfası -->
+        <div id="aviatorPage" style="display: none;">
+            <div class="bet-history-header">
+                <h2>✈️ Aviator Oyunu</h2>
+                <button onclick="showMainPage()" class="back-button">🏠 Ana Sayfa</button>
             </div>
 
-            <div class="vs">⚡ VS ⚡
-                <div class="referee">
-                    <p>🎽 HAKEM</p>
-                    <p class="referee-name">Hayrettin Hoca</p>
+            <div class="aviator-container">
+                <div class="aviator-screen" id="aviatorScreen">
+                    <div id="aviatorPlane"
+                        style="font-size: 60px; position: absolute; bottom: 20px; left: 20px; transition: all 0.1s; display: none;">
+                        🚀</div>
+                    <div class="multiplier-display" id="aviatorMultiplier">1.00x</div>
+                    <div class="crash-message" id="aviatorCrash" style="display: none;">UÇTU!</div>
                 </div>
+
+                <div class="aviator-controls">
+                    <div class="bet-input-container">
+                        <label for="aviatorBetAmount">Bahis Miktarı:</label>
+                        <input type="number" id="aviatorBetAmount" placeholder="Miktar girin" min="1" max="99999">
+                    </div>
+                    <button id="aviatorBetBtn" class="confirm-bet-button" onclick="startAviatorBet()">💰 Bahis
+                        Yap</button>
+                    <button id="aviatorCashoutBtn" class="bet-button"
+                        style="display: none; background: #00cc66; width: 100%; margin-top: 10px;"
+                        onclick="cashoutAviator()">💵 Bozdur</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Günlük Çark Sayfası -->
+        <div id="spinWheelPage" style="display: none;">
+            <div class="bet-history-header">
+                <h2>🎡 Günlük Çark</h2>
+                <button onclick="showMainPage()" class="back-button">🏠 Ana Sayfa</button>
             </div>
 
-            <div class="team team-b">
-                <h2>⚽ B Takımı</h2>
-                <div class="players">
-                    <div class="player">👤 Hidayet Hoca</div>
-                    <div class="player">👤 Ahmetsaim</div>
-                    <div class="player">👤 Özkan Hoca</div>
-                    <div class="player">👤 Said</div>
-                    <div class="player">👤 Alper King</div>
-                    <div class="player">👤 Yusuf</div>
-                    <div class="player">👤 Ferhat Hoca</div>
+            <div class="spin-wheel-container" style="text-align: center; padding: 20px;">
+                <p id="spinMessage"
+                    style="color: #FFD700; font-size: 1.2em; margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,215,0,0.5);">
+                    Her gün 1 kez ücretsiz çevir ve kazan!</p>
+
+                <div class="wheel-box"
+                    style="position: relative; width: 300px; height: 300px; margin: 0 auto; border-radius: 50%; border: 5px solid #ff00ff; box-shadow: 0 0 30px rgba(255,0,255,0.5); overflow: hidden;">
+                    <div class="wheel-marker"
+                        style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #FFD700; z-index: 10; filter: drop-shadow(0 0 5px #FFD700);">
+                    </div>
+
+                    <div id="wheel" style="width: 100%; height: 100%; border-radius: 50%; position: relative; transition: transform 4s cubic-bezier(0.17, 0.67, 0.1, 1); background: conic-gradient(
+                        #ff0000 0deg 40deg,
+                        #1a1a1a 40deg 80deg,
+                        #00ff00 80deg 120deg,
+                        #1a1a1a 120deg 160deg,
+                        #0000ff 160deg 200deg,
+                        #1a1a1a 200deg 240deg,
+                        #ffff00 240deg 280deg,
+                        #ff00ff 280deg 320deg,
+                        #00ffff 320deg 360deg
+                    );">
+                        <!-- Sectors added via CSS/JS logic for precision. We'll use conic-gradient for simplicity and JS for calculation -->
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(20deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                1000💰</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(60deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                BOŞ</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(100deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px white; color: black;">
+                                50000💸</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(140deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                BOŞ</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(180deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                200💰</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(220deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                BOŞ</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(260deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px white; color: black;">
+                                2000💰</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(300deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px black; color: white;">
+                                100💰</div>
+                        </div>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(340deg);">
+                            <div
+                                style="position: absolute; top: 12%; left: 50%; transform: translateX(-50%); font-weight: bold; font-size: 1.2em; text-shadow: 1px 1px 2px white; color: black;">
+                                500💰</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="odds">Oran: %2</div>
-                <button class="bet-button" onclick="showBet('B Takımı', 2, 200)">💰 Bahis Yap</button>
+
+                <button id="spinBtn" class="confirm-bet-button"
+                    style="margin-top: 30px; font-size: 1.5em; padding: 15px 40px;" onclick="spinWheel()">🎡 Çarkı
+                    Çevir</button>
             </div>
         </div>
+
+        <!-- Mayın Oyunu Sayfası -->
+        <div id="minesPage" style="display: none;">
+            <div class="bet-history-header">
+                <h2>💣 Mayın Oyunu</h2>
+                <button onclick="showMainPage()" class="back-button">🏠 Ana Sayfa</button>
+            </div>
+
+            <div class="aviator-container" style="flex-direction: row; flex-wrap: wrap; gap: 20px;">
+                <div class="aviator-controls" style="flex: 1; min-width: 250px;">
+                    <div class="bet-input-container">
+                        <label for="minesBetAmount">Bahis Miktarı:</label>
+                        <input type="number" id="minesBetAmount" placeholder="Miktar girin" min="1" max="99999"
+                            value="10">
+                    </div>
+                    <div class="bet-input-container" style="margin-top: 15px;">
+                        <label for="minesCount">Mayın Sayısı (1-24):</label>
+                        <select id="minesCount"
+                            style="width: 100%; padding: 10px; background: #333; color: white; border: 1px solid #ff00ff; border-radius: 5px;">
+                            <option value="1">1</option>
+                            <option value="3" selected>3</option>
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="24">24</option>
+                        </select>
+                    </div>
+                    <button id="minesBetBtn" class="confirm-bet-button" style="margin-top: 20px;"
+                        onclick="startMinesBet()">💰 Bahis Yap</button>
+                    <button id="minesCashoutBtn" class="bet-button"
+                        style="display: none; background: #00cc66; width: 100%; margin-top: 10px;"
+                        onclick="cashoutMines()">💵 Bozdur (<span id="minesCurrentWin">0</span>)</button>
+
+                    <div id="minesMultiplierDisplay"
+                        style="margin-top: 20px; font-size: 1.2em; color: #00ffff; text-align: center; display: none;">
+                        Çarpan: <span id="minesCurrentMultiplier">1.00</span>x
+                    </div>
+                </div>
+
+                <div class="mines-screen"
+                    style="flex: 2; min-width: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; border: 2px solid #ff00ff; border-radius: 10px; padding: 20px; box-shadow: 0 0 20px rgba(255,0,255,0.2);">
+                    <div id="minesGrid"
+                        style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; max-width: 400px; aspect-ratio: 1/1;">
+                        <!-- JS ile 25 hücre buraya eklenecek -->
+                    </div>
+                    <!-- Overlay message -->
+                    <div id="minesOverlayMsg"
+                        style="position: absolute; display: none; background: rgba(0,0,0,0.8); padding: 20px 40px; border-radius: 10px; color: white; font-size: 2em; font-weight: bold; text-shadow: 0 0 10px currentColor; z-index: 10;">
+                        KAZANDIN!
+                    </div>
+                </div>
+            </div>
         </div>
-        <!-- Ana Sayfa İçeriği Sonu -->
+
+        <!-- AI Blackjack Sayfası -->
+        <div id="blackjackPage" style="display: none;">
+            <div class="bet-history-header">
+                <h2>🃏 AI Blackjack</h2>
+                <button onclick="showMainPage()" class="back-button">🏠 Ana Sayfa</button>
+            </div>
+
+            <div class="blackjack-container"
+                style="background: #0b2d15; border: 3px solid #b8860b; border-radius: 15px; padding: 20px; box-shadow: 0 0 30px rgba(184, 134, 11, 0.3);">
+
+                <!-- Masa Ortası / Mesaj -->
+                <div id="bjMessage"
+                    style="color: #FFD700; font-size: 1.5em; text-align: center; margin-bottom: 20px; text-shadow: 1px 1px 5px black; min-height: 1.5em;">
+                    Bahis yap ve oynamaya başla!
+                </div>
+
+                <!-- Kurpiyer (AI) -->
+                <div class="bj-player-area" style="text-align: center; margin-bottom: 30px;">
+                    <h3 style="color: white; margin-bottom: 10px;">🤖 Kurpiyer <span id="dealerScore"
+                            style="color: #aaa; font-size: 0.8em;">(0)</span></h3>
+                    <div id="dealerCards"
+                        style="display: flex; justify-content: center; gap: -20px; min-height: 120px;">
+                        <!-- Kartlar buraya gelecek -->
+                    </div>
+                </div>
+
+                <!-- Oyuncu -->
+                <div class="bj-player-area" style="text-align: center; margin-bottom: 30px;">
+                    <h3 style="color: white; margin-bottom: 10px;">👤 Sen <span id="playerScore"
+                            style="color: #aaa; font-size: 0.8em;">(0)</span></h3>
+                    <div id="playerCards"
+                        style="display: flex; justify-content: center; gap: -20px; min-height: 120px;">
+                        <!-- Kartlar buraya gelecek -->
+                    </div>
+                </div>
+
+                <!-- Kontroller -->
+                <div class="bj-controls"
+                    style="display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
+                    <div id="bjBettingControls" style="display: flex; gap: 10px;">
+                        <input type="number" id="bjBetAmount" placeholder="Bahis" min="1"
+                            style="flex: 1; padding: 10px; background: #222; color: white; border: 1px solid #b8860b; border-radius: 5px;">
+                        <button onclick="startBlackjack()"
+                            style="flex: 1; background: #b8860b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">Dağıt</button>
+                    </div>
+
+                    <div id="bjActionControls" style="display: none; gap: 10px;">
+                        <button onclick="hitBlackjack()"
+                            style="flex: 1; background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.2em;">➕
+                            Kart İste</button>
+                        <button onclick="standBlackjack()"
+                            style="flex: 1; background: #dc3545; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1.2em;">✋
+                            Bekle (Stand)</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- Yeni Ana Sayfa İçeriği -->
+        <div id="mainContent" style="display: block;">
+            <div class="welcome-section" style="text-align: center; padding: 50px 20px;">
+                <h2 style="font-size: 3em; margin-bottom: 20px;">Hoş Geldin, <span id="welcomeName">Oyuncu</span>!
+                </h2>
+                <p style="font-size: 1.5em; color: #bbb; margin-bottom: 40px;">En iyi oranlar ve heyecan verici
+                    oyunlar
+                    seni bekliyor.</p>
+
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div class="home-card" onclick="showMatchPage()"
+                        style="cursor: pointer; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px; border: 2px solid #ff0000; width: 300px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 4em;">⚽</span>
+                            <h3 style="margin-top: 15px; font-size: 1.8em; color: #fff;">Maç Bahisleri</h3>
+                            <p style="color: #FFD700; margin-top: 10px; margin-bottom: 20px;">Günün en popüler maçlarına
+                                bahis yap.</p>
+                        </div>
+                        <button class="bet-button" style="width: 100%; border-radius: 5px;">➡️ Oyuna Git</button>
+                    </div>
+
+                    <div class="home-card" onclick="showAviatorPage()"
+                        style="cursor: pointer; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px; border: 2px solid #ff0000; width: 300px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 4em;">✈️</span>
+                            <h3 style="margin-top: 15px; font-size: 1.8em; color: #fff;">Aviator Oyna</h3>
+                            <p style="color: #FFD700; margin-top: 10px; margin-bottom: 20px;">Çarpanı yakala, kazancını
+                                katla!</p>
+                        </div>
+                        <button class="bet-button" style="width: 100%; border-radius: 5px;">➡️ Oyuna Git</button>
+                    </div>
+
+                    <div class="home-card" onclick="showMinesPage()"
+                        style="cursor: pointer; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px; border: 2px solid #00ffff; width: 300px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 4em;">💣</span>
+                            <h3 style="margin-top: 15px; font-size: 1.8em; color: #fff;">Mayın Oyunu</h3>
+                            <p style="color: #00ffff; margin-top: 10px; margin-bottom: 20px;">Mayınlara basmadan
+                                altınları topla!</p>
+                        </div>
+                        <button class="bet-button"
+                            style="width: 100%; background: #008888; border-color: #00ffff; border-radius: 5px;">➡️
+                            Oyuna Git</button>
+                    </div>
+
+                    <div class="home-card" onclick="showBlackjackPage()"
+                        style="cursor: pointer; background: rgba(0,0,0,0.5); padding: 30px; border-radius: 15px; border: 2px solid #b8860b; width: 300px; transition: 0.3s; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 4em;">🃏</span>
+                            <h3 style="margin-top: 15px; font-size: 1.8em; color: #fff;">AI Blackjack</h3>
+                            <p style="color: #b8860b; margin-top: 10px; margin-bottom: 20px;">21'e ulaş, kurpiyeri alt
+                                et!</p>
+                        </div>
+                        <button class="bet-button"
+                            style="width: 100%; background: #b8860b; border-color: #ffd700; border-radius: 5px;">➡️
+                            Oyuna Git</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maç Bahis Sayfası (Eski Ana Sayfa) -->
+        <div id="matchPage" style="display: none;">
+            <div class="matches-container" style="max-height: 80vh; overflow-y: auto; padding-right: 15px;">
+                <!-- PAZARTESİ -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Pazartesi</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🦅 Beşiktaş</h3>
+                            <button class="bet-button" onclick="showBet('Beşiktaş', 1.6, 160)">Oran: %1.6</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">20:00</span></div>
+                        <div class="match-team">
+                            <h3>🌊 Trabzonspor</h3>
+                            <button class="bet-button" onclick="showBet('Trabzonspor', 3.4, 340)">Oran:
+                                %3.4</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('BJK - TS Beraberlik', 3.1, 310)">🤝
+                            Beraberlik: %3.1</button>
+                    </div>
+                </div>
+
+                <!-- SALI -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Salı (Şampiyonlar Ligi)</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🔴 Bayern Münih</h3>
+                            <button class="bet-button" onclick="showBet('Bayern Münih', 1.4, 140)">Oran:
+                                %1.4</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">22:00</span></div>
+                        <div class="match-team">
+                            <h3>⚫ Juventus</h3>
+                            <button class="bet-button" onclick="showBet('Juventus', 4.5, 450)">Oran: %4.5</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('BAY - JUV Beraberlik', 4.0, 400)">🤝
+                            Beraberlik: %4.0</button>
+                    </div>
+                </div>
+
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🔴 PSG</h3>
+                            <button class="bet-button" onclick="showBet('PSG', 2.1, 210)">Oran: %2.1</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">22:00</span></div>
+                        <div class="match-team">
+                            <h3>🔵 Napoli</h3>
+                            <button class="bet-button" onclick="showBet('Napoli', 2.7, 270)">Oran: %2.7</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('PSG - NAP Beraberlik', 3.4, 340)">🤝
+                            Beraberlik: %3.4</button>
+                    </div>
+                </div>
+
+                <!-- ÇARŞAMBA -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Çarşamba (Şampiyonlar Ligi)</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>👑 Real Madrid</h3>
+                            <button class="bet-button" onclick="showBet('Real Madrid', 1.8, 180)">Oran:
+                                %1.8</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">22:00</span></div>
+                        <div class="match-team">
+                            <h3>🔴 Liverpool</h3>
+                            <button class="bet-button" onclick="showBet('Liverpool', 2.9, 290)">Oran: %2.9</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('RM - LIV Beraberlik', 3.5, 350)">🤝
+                            Beraberlik: %3.5</button>
+                    </div>
+                </div>
+
+                <!-- PERŞEMBE -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Perşembe (Avrupa Ligi)</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🦁 Galatasaray</h3>
+                            <button class="bet-button" onclick="showBet('Galatasaray', 2.2, 220)">Oran:
+                                %2.2</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">20:45</span></div>
+                        <div class="match-team">
+                            <h3>🦊 Roma</h3>
+                            <button class="bet-button" onclick="showBet('Roma', 2.8, 280)">Oran: %2.8</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('GS - ROMA Beraberlik', 3.3, 330)">🤝
+                            Beraberlik: %3.3</button>
+                    </div>
+                </div>
+
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🦅 Fenerbahçe</h3>
+                            <button class="bet-button" onclick="showBet('Fenerbahçe', 1.9, 190)">Oran: %1.9</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">23:00</span></div>
+                        <div class="match-team">
+                            <h3>🔴 Manchester United</h3>
+                            <button class="bet-button" onclick="showBet('Manchester Utd', 3.0, 300)">Oran:
+                                %3.0</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('FB - MANU Beraberlik', 3.4, 340)">🤝
+                            Beraberlik: %3.4</button>
+                    </div>
+                </div>
+
+                <!-- CUMA -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Cuma</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🔶 Borussia Dortmund</h3>
+                            <button class="bet-button" onclick="showBet('Dortmund', 1.5, 150)">Oran: %1.5</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">22:30</span></div>
+                        <div class="match-team">
+                            <h3>🔵 Leipzig</h3>
+                            <button class="bet-button" onclick="showBet('Leipzig', 4.1, 410)">Oran: %4.1</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('DOR - LEI Beraberlik', 3.8, 380)">🤝
+                            Beraberlik: %3.8</button>
+                    </div>
+                </div>
+
+                <!-- CUMARTESİ -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Cumartesi</h3>
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🔴 Arsenal</h3>
+                            <button class="bet-button" onclick="showBet('Arsenal', 2.3, 230)">Oran: %2.3</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">15:30</span></div>
+                        <div class="match-team">
+                            <h3>🔵 Chelsea</h3>
+                            <button class="bet-button" onclick="showBet('Chelsea', 2.6, 260)">Oran: %2.6</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('ARS - CHE Beraberlik', 3.1, 310)">🤝
+                            Beraberlik: %3.1</button>
+                    </div>
+                </div>
+
+                <div class="match-card">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🐎 Konyaspor</h3>
+                            <button class="bet-button" onclick="showBet('Konyaspor', 3.5, 350)">Oran: %3.5</button>
+                        </div>
+                        <div class="match-vs">⚡ VS ⚡<br><span class="match-time">19:00</span></div>
+                        <div class="match-team">
+                            <h3>🦅 Beşiktaş</h3>
+                            <button class="bet-button" onclick="showBet('Beşiktaş', 1.7, 170)">Oran: %1.7</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('KON - BJK Beraberlik', 3.2, 320)">🤝
+                            Beraberlik: %3.2</button>
+                    </div>
+                </div>
+
+                <!-- PAZAR -->
+                <h3 class="day-title"
+                    style="color: #fff; text-align: center; margin-top: 20px; font-size: 1.5em; text-transform: uppercase; background: rgba(255,0,0,0.3); padding: 5px; border-radius: 5px;">
+                    📅 Pazar Derbisi</h3>
+                <div class="match-card"
+                    style="border-color: #FFD700 !important; transform: scale(1.02); box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);">
+                    <div class="match-teams">
+                        <div class="match-team">
+                            <h3>🦁 Galatasaray</h3>
+                            <button class="bet-button" onclick="showBet('Galatasaray', 2.1, 210)">Oran:
+                                %2.1</button>
+                        </div>
+                        <div class="match-vs">⚡ DERBİ ⚡<br><span class="match-time"
+                                style="font-size: 0.6em; background: #FF3366;">19:00</span></div>
+                        <div class="match-team">
+                            <h3>🦅 Fenerbahçe</h3>
+                            <button class="bet-button" onclick="showBet('Fenerbahçe', 2.4, 240)">Oran: %2.4</button>
+                        </div>
+                    </div>
+                    <div class="match-draw">
+                        <button class="bet-button draw-btn" onclick="showBet('GS - FB Beraberlik', 3.0, 300)">🤝
+                            Beraberlik: %3.0</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Maç Sayfası İçeriği Sonu -->
     </div>
 
     <div id="betModal" class="modal">
@@ -193,14 +676,14 @@
             <div class="bet-info">
                 <p class="selected-team">Seçilen Takım: <span id="teamName"></span></p>
                 <p class="user-balance-display">Mevcut Bakiye: <span id="modalBalance">2000</span> 💰</p>
-                
+
                 <div class="bet-input-container">
                     <label for="betAmount">Bahis Miktarı:</label>
                     <input type="number" id="betAmount" placeholder="Miktar girin" min="1" max="99999">
                 </div>
-                
+
                 <button class="confirm-bet-button" onclick="confirmBet()">✅ Onayla</button>
-                
+
                 <div id="betResult" class="bet-result" style="display: none;">
                     <p>✅ Bahis başarıyla alındı!</p>
                     <p class="result-date">📅 Sonuç: 01.03.2026 Saat 23:00'da açıklanacaktır</p>
@@ -212,4 +695,5 @@
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
